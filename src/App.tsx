@@ -10,7 +10,7 @@ import { ThemeProvider } from './providers/ThemeProvider';
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './contexts/AuthContext';
 import React from 'react';
-import { Center, Spinner, Box } from '@chakra-ui/react';
+import { Center, Spinner } from '@chakra-ui/react';
 
 // Create a client
 const queryClient = new QueryClient({
