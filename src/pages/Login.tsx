@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -20,9 +20,29 @@ export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const [redirectPath, setRedirectPath] = useState('/dashboard');
+  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
+
+  // Check for redirect path in localStorage
+  useEffect(() => {
+    // If already logged in, redirect
+    if (user) {
+      navigate('/dashboard');
+      return;
+    }
+    
+    try {
+      const savedRedirect = localStorage.getItem('auth_redirect');
+      if (savedRedirect) {
+        setRedirectPath(savedRedirect);
+        console.log('Found saved redirect path:', savedRedirect);
+      }
+    } catch (error) {
+      console.error('Error reading redirect path:', error);
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +67,16 @@ export const Login = () => {
           isClosable: true,
         });
       }
-      navigate('/dashboard');
+      
+      // Clear the saved redirect path
+      try {
+        localStorage.removeItem('auth_redirect');
+      } catch (error) {
+        console.error('Error clearing redirect path:', error);
+      }
+      
+      // Navigate to the saved path or dashboard as default
+      navigate(redirectPath);
     } catch (error) {
       toast({
         title: isLogin ? 'Login failed' : 'Sign up failed',

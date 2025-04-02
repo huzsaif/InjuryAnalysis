@@ -10,6 +10,7 @@ import { ThemeProvider } from './providers/ThemeProvider';
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './contexts/AuthContext';
 import React from 'react';
+import { Center, Spinner, Box } from '@chakra-ui/react';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -25,10 +26,22 @@ const queryClient = new QueryClient({
 const ProtectedRoute = ({ children }: { children: React.ReactElement }) => {
   const { user, loading } = useAuth();
   
-  // Show nothing while authentication state is loading
-  if (loading) return null;
+  // Show a loading spinner while checking authentication
+  if (loading) {
+    return (
+      <Center height="100vh">
+        <Spinner size="xl" color="blue.500" thickness="4px" />
+      </Center>
+    );
+  }
   
   if (!user) {
+    // Store the intended destination for redirect after login
+    try {
+      localStorage.setItem('auth_redirect', window.location.pathname);
+    } catch (error) {
+      console.error('Error saving redirect path:', error);
+    }
     return <Navigate to="/login" replace />;
   }
   
@@ -43,9 +56,19 @@ function App() {
           <Router>
             <Routes>
               <Route path="/" element={<Layout />}>
-                {/* Redirect from home to login page */}
-                <Route index element={<Navigate to="/login" replace />} />
-                <Route path="login" element={<Login />} />
+                {/* Redirect from home to login page or dashboard if logged in */}
+                <Route index element={
+                  <RouteBasedOnAuth 
+                    authenticated={<Navigate to="/dashboard" replace />} 
+                    unauthenticated={<Navigate to="/login" replace />} 
+                  />
+                } />
+                <Route path="login" element={
+                  <RouteBasedOnAuth 
+                    authenticated={<Navigate to="/dashboard" replace />}
+                    unauthenticated={<Login />}
+                  />
+                } />
                 <Route path="home" element={<Home />} />
                 
                 {/* Protected routes */}
@@ -73,5 +96,26 @@ function App() {
     </QueryClientProvider>
   );
 }
+
+// Helper component to decide what to render based on auth state
+const RouteBasedOnAuth = ({ 
+  authenticated, 
+  unauthenticated 
+}: { 
+  authenticated: React.ReactElement; 
+  unauthenticated: React.ReactElement;
+}) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <Center height="100vh">
+        <Spinner size="xl" color="blue.500" thickness="4px" />
+      </Center>
+    );
+  }
+  
+  return user ? authenticated : unauthenticated;
+};
 
 export default App;

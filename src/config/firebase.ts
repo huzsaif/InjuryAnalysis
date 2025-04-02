@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { getAuth, setPersistence, browserLocalPersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -13,4 +13,14 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+// Enable persistent sessions
+setPersistence(auth, browserLocalPersistence)
+  .then(() => {
+    console.log('Firebase authentication persistence set to LOCAL');
+  })
+  .catch((error) => {
+    console.error('Error setting authentication persistence:', error);
+  });
+
 export const db = getFirestore(app);
