@@ -21,11 +21,12 @@ import {
   AlertDialogOverlay,
   useDisclosure,
 } from '@chakra-ui/react';
-import { DeleteIcon } from '@chakra-ui/icons';
+import { DeleteIcon, InfoIcon } from '@chakra-ui/icons';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { getUserInjuries, getInjuryProgress, deleteInjury } from '../services/firebase';
+import { generateRecoveryPlan } from '../services/openai';
 import { useAuth } from '../contexts/AuthContext';
 import type { Injury, ProgressEntry } from '../types';
 
@@ -36,6 +37,8 @@ export const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(false);
   const [deletingInjury, setDeletingInjury] = useState<string | null>(null);
+  const [generatingPlan, setGeneratingPlan] = useState(false);
+  const [recoveryPlan, setRecoveryPlan] = useState<string | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null) as React.RefObject<HTMLButtonElement>;
   
@@ -82,6 +85,85 @@ export const Dashboard = () => {
     } finally {
       setDeletingInjury(null);
       onClose();
+    }
+  };
+
+  const handleGenerateRecoveryPlan = async () => {
+    setGeneratingPlan(true);
+    setRecoveryPlan(null);
+    
+    try {
+      if (!selectedInjury) {
+        throw new Error('Please select an injury first');
+      }
+
+      const selectedInjuryData = injuries.find(injury => injury.id === selectedInjury);
+      if (!selectedInjuryData) {
+        throw new Error('Selected injury data not found');
+      }
+
+      // Format progress data for the AI - using safe date formatting
+      const formatProgressDate = (date: any) => {
+        try {
+          if (date && typeof date.toDate === 'function') {
+            return format(date.toDate(), 'MMM d, yyyy');
+          } else if (date instanceof Date) {
+            return format(date, 'MMM d, yyyy');
+          }
+          return 'Unknown date';
+        } catch (error) {
+          console.error('Error formatting date:', error);
+          return 'Unknown date';
+        }
+      };
+
+      const progressNotes = progressData.map(entry => {
+        let dateStr = 'Unknown date';
+        try {
+          dateStr = formatProgressDate(entry.date);
+        } catch (error) {
+          console.error('Error formatting progress date:', error);
+        }
+        
+        return `Date: ${dateStr}, Pain: ${entry.painLevel}/10, Mobility: ${entry.mobility}/10, Swelling: ${entry.swelling || 5}/10, Notes: ${entry.notes || 'None'}`;
+      }).join('\n');
+
+      const daysSinceInjury = Math.floor(
+        (new Date().getTime() - selectedInjuryData.date.getTime()) / (1000 * 3600 * 24)
+      );
+
+      const additionalInfo = `
+Progress Data (${progressData.length} entries):
+${progressNotes}
+
+Current Status:
+- Days since injury: ${daysSinceInjury}
+- Latest pain level: ${progressData.length > 0 ? progressData[0].painLevel : 'Unknown'}/10
+- Latest mobility: ${progressData.length > 0 ? progressData[0].mobility : 'Unknown'}/10
+- Latest swelling: ${progressData.length > 0 ? (progressData[0].swelling || 'Not recorded') : 'Unknown'}/10
+`;
+
+      const plan = await generateRecoveryPlan(selectedInjuryData, additionalInfo);
+      setRecoveryPlan(plan);
+      
+      toast({
+        title: 'Recovery plan generated',
+        description: 'Your personalized recovery plan is ready',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Error generating recovery plan:', error);
+      toast({
+        title: 'Error generating recovery plan',
+        description: error instanceof Error ? error.message : 'An error occurred',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setGeneratingPlan(false);
     }
   };
 
@@ -172,6 +254,31 @@ export const Dashboard = () => {
     }
   };
 
+  // Prepare chart data with proper date handling
+  const prepareChartData = () => {
+    return progressData.map(entry => {
+      try {
+        // Create a new object with the date converted to a JavaScript Date
+        const entryDate = entry.date && typeof entry.date.toDate === 'function' 
+          ? entry.date.toDate() 
+          : entry.date instanceof Date ? entry.date : new Date();
+          
+        return {
+          ...entry,
+          date: entryDate,
+        };
+      } catch (error) {
+        console.error('Error preparing chart data:', error);
+        return {
+          ...entry,
+          date: new Date(), // Fallback to current date
+        };
+      }
+    });
+  };
+
+  const chartData = prepareChartData();
+
   return (
     <Box>
       <HStack justify="space-between" mb={8}>
@@ -254,49 +361,109 @@ export const Dashboard = () => {
           )}
         </VStack>
 
-        {/* Progress Chart */}
-        <Box
-          p={6}
-          borderWidth={1}
-          borderRadius="lg"
-          bg={bgColor}
-          borderColor={borderColor}
-        >
-          <Heading size="md" mb={6}>Recovery Progress</Heading>
-          {loadingProgress ? (
-            <Center h="300px">
-              <Spinner />
-            </Center>
-          ) : progressData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={progressData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="date"
-                  tickFormatter={(date) => format(date, 'MMM d')}
-                />
-                <YAxis />
-                <Tooltip
-                  labelFormatter={(date) => format(date, 'MMM d, yyyy')}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="painLevel"
-                  stroke="#F56565"
-                  name="Pain Level"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="mobility"
-                  stroke="#4299E1"
-                  name="Mobility"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <Text color="gray.500">No progress data available</Text>
+        {/* Progress Chart and Recovery Plan */}
+        <VStack align="stretch" spacing={6}>
+          <Box
+            p={6}
+            borderWidth={1}
+            borderRadius="lg"
+            bg={bgColor}
+            borderColor={borderColor}
+          >
+            <Heading size="md" mb={6}>Recovery Progress</Heading>
+            {loadingProgress ? (
+              <Center h="300px">
+                <Spinner />
+              </Center>
+            ) : progressData.length > 0 ? (
+              <>
+                <HStack justify="space-between" mb={4}>
+                  <Heading size="sm">Progress Chart</Heading>
+                  <Button 
+                    onClick={handleGenerateRecoveryPlan} 
+                    colorScheme="blue" 
+                    isLoading={generatingPlan}
+                    leftIcon={<InfoIcon />}
+                    size="sm"
+                  >
+                    Generate Recovery Plan
+                  </Button>
+                </HStack>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={(date) => {
+                        try {
+                          return format(date, 'MMM d');
+                        } catch (error) {
+                          return '';
+                        }
+                      }}
+                    />
+                    <YAxis />
+                    <Tooltip
+                      labelFormatter={(date) => {
+                        try {
+                          return format(date, 'MMM d, yyyy');
+                        } catch (error) {
+                          return 'Unknown date';
+                        }
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="painLevel"
+                      stroke="#F56565"
+                      name="Pain Level"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="mobility"
+                      stroke="#4299E1"
+                      name="Mobility"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="swelling"
+                      stroke="#9F7AEA"
+                      name="Swelling"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </>
+            ) : (
+              <VStack spacing={4} align="stretch">
+                <Text color="gray.500">No progress data available</Text>
+                {selectedInjury && (
+                  <Button 
+                    as={RouterLink} 
+                    to={`/progress/${selectedInjury}`}
+                    colorScheme="blue"
+                    size="sm"
+                  >
+                    Log Your First Progress Update
+                  </Button>
+                )}
+              </VStack>
+            )}
+          </Box>
+
+          {/* Recovery Plan Section */}
+          {recoveryPlan && (
+            <Box 
+              p={6} 
+              borderWidth={1} 
+              borderRadius="lg" 
+              bg={bgColor}
+              borderColor={borderColor}
+            >
+              <Heading size="md" mb={4}>Your Recovery Plan</Heading>
+              <Text whiteSpace="pre-wrap" fontSize="md">{recoveryPlan}</Text>
+            </Box>
           )}
-        </Box>
+        </VStack>
       </Grid>
 
       <AlertDialog
