@@ -36,8 +36,8 @@ const Feature = ({ icon, title, description }: { icon: any; title: string; descr
 
 export const Home = () => {
   return (
-    <Box py={20}>
-      <Container maxW="container.xl">
+    <Box py={20} width="100%">
+      <Container maxW="100%">
         <VStack spacing={8} textAlign="center" mb={16}>
           <Heading
             as="h1"

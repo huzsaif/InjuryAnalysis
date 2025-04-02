@@ -62,52 +62,54 @@ export const Login = () => {
   };
 
   return (
-    <Box maxW="container.sm" mx="auto" py={10}>
-      <VStack spacing={8}>
-        <Heading>{isLogin ? 'Sign In' : 'Create Account'}</Heading>
-        <form onSubmit={handleSubmit} style={{ width: '100%' }}>
-          <Stack spacing={4}>
-            <FormControl isRequired>
-              <FormLabel>Email</FormLabel>
-              <Input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-              />
-            </FormControl>
-            <FormControl isRequired>
-              <FormLabel>Password</FormLabel>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-              />
-            </FormControl>
+    <Box width="100%" py={10} display="flex" justifyContent="center">
+      <Box width={["90%", "80%", "60%", "500px"]}>
+        <VStack spacing={8} width="100%">
+          <Heading>{isLogin ? 'Sign In' : 'Create Account'}</Heading>
+          <form onSubmit={handleSubmit} style={{ width: '100%' }}>
+            <Stack spacing={4}>
+              <FormControl isRequired>
+                <FormLabel>Email</FormLabel>
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                />
+              </FormControl>
+              <FormControl isRequired>
+                <FormLabel>Password</FormLabel>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter your password"
+                />
+              </FormControl>
+              <Button
+                type="submit"
+                size="lg"
+                isLoading={loading}
+                loadingText={isLogin ? "Signing in..." : "Creating account..."}
+              >
+                {isLogin ? 'Sign In' : 'Create Account'}
+              </Button>
+            </Stack>
+          </form>
+          <HStack>
+            <Text>
+              {isLogin ? "Don't have an account?" : "Already have an account?"}
+            </Text>
             <Button
-              type="submit"
-              size="lg"
-              isLoading={loading}
-              loadingText={isLogin ? "Signing in..." : "Creating account..."}
+              variant="link"
+              onClick={() => setIsLogin(!isLogin)}
+              colorScheme="blue"
             >
-              {isLogin ? 'Sign In' : 'Create Account'}
+              {isLogin ? 'Sign Up' : 'Sign In'}
             </Button>
-          </Stack>
-        </form>
-        <HStack>
-          <Text>
-            {isLogin ? "Don't have an account?" : "Already have an account?"}
-          </Text>
-          <Button
-            variant="link"
-            onClick={() => setIsLogin(!isLogin)}
-            colorScheme="blue"
-          >
-            {isLogin ? 'Sign Up' : 'Sign In'}
-          </Button>
-        </HStack>
-      </VStack>
+          </HStack>
+        </VStack>
+      </Box>
     </Box>
   );
 }; 

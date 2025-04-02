@@ -8,8 +8,22 @@ const theme = extendTheme({
   },
   styles: {
     global: (props: any) => ({
+      html: {
+        width: '100%',
+        height: '100%',
+        margin: 0,
+        padding: 0,
+      },
       body: {
+        width: '100%',
+        height: '100%',
+        margin: 0,
+        padding: 0,
         bg: mode('gray.50', 'gray.900')(props),
+      },
+      '#root': {
+        width: '100%',
+        height: '100%',
       },
     }),
   },
@@ -31,6 +45,11 @@ const theme = extendTheme({
     Button: {
       defaultProps: {
         colorScheme: 'brand',
+      },
+    },
+    Container: {
+      baseStyle: {
+        maxW: '100%',
       },
     },
   },
