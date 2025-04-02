@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Helper function to check if user owns the injury
+    function ownsInjury(injuryId) {
+      let injury = get(/databases/$(database)/documents/injuries/$(injuryId));
+      return injury != null && injury.data.userId == request.auth.uid;
+    }
+
+    // Injuries collection
+    match /injuries/{injuryId} {
+      allow read: if isAuthenticated() && isOwner(resource.data.userId);
+      allow create: if isAuthenticated() && isOwner(request.resource.data.userId);
+      allow update, delete: if isAuthenticated() && isOwner(resource.data.userId);
+    }
+
+    // Progress collection
+    match /progress/{progressId} {
+      // Allow listing progress entries if authenticated
+      allow list: if isAuthenticated();
+      
+      // For individual document operations, we'll check injury ownership
+      allow get: if isAuthenticated() && ownsInjury(resource.data.injuryId);
+      allow create: if isAuthenticated() && ownsInjury(request.resource.data.injuryId);
+      allow update, delete: if isAuthenticated() && ownsInjury(resource.data.injuryId);
+    }
+  }
+}
