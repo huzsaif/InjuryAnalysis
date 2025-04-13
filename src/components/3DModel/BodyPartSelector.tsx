@@ -85,6 +85,10 @@ export const BodyPartSelector: React.FC<BodyPartSelectorProps> = ({
   // Calculate how many parts are selected
   const selectedCount = selectedBodyParts.length;
 
+  const handleCheckboxChange = (partName: string, isChecked: boolean) => {
+    onSelectBodyPart(partName, isChecked);
+  };
+
   return (
     <Box 
       borderWidth={1} 
@@ -143,29 +147,27 @@ export const BodyPartSelector: React.FC<BodyPartSelectorProps> = ({
           </TabPanel>
           
           <TabPanel>
-            <CheckboxGroup value={selectedBodyParts}>
-              <VStack align="stretch" spacing={6} p={4}>
-                {Object.entries(bodyPartsByRegion).map(([region, parts]) => (
-                  <Box key={region}>
-                    <Heading size="sm" mb={2}>{region}</Heading>
-                    <Wrap spacing={2}>
-                      {parts.map(part => (
-                        <WrapItem key={part}>
-                          <Checkbox 
-                            value={part} 
-                            colorScheme="blue"
-                            isChecked={selectedBodyParts.includes(part)}
-                            onChange={(e) => onSelectBodyPart(part, e.target.checked)}
-                          >
-                            {part}
-                          </Checkbox>
-                        </WrapItem>
-                      ))}
-                    </Wrap>
-                  </Box>
-                ))}
-              </VStack>
-            </CheckboxGroup>
+            <VStack align="stretch" spacing={6} p={4}>
+              {Object.entries(bodyPartsByRegion).map(([region, parts]) => (
+                <Box key={region}>
+                  <Heading size="sm" mb={2}>{region}</Heading>
+                  <Wrap spacing={2}>
+                    {parts.map(part => (
+                      <WrapItem key={part}>
+                        <Checkbox 
+                          name={`bodyPart-${part.replace(/\s+/g, '-').toLowerCase()}`}
+                          isChecked={selectedBodyParts.includes(part)}
+                          onChange={(e) => handleCheckboxChange(part, e.target.checked)}
+                          colorScheme="blue"
+                        >
+                          {part}
+                        </Checkbox>
+                      </WrapItem>
+                    ))}
+                  </Wrap>
+                </Box>
+              ))}
+            </VStack>
           </TabPanel>
         </TabPanels>
       </Tabs>

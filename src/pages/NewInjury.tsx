@@ -247,7 +247,7 @@ export const NewInjury = () => {
             <form onSubmit={handleSubmit}>
               <VStack spacing={6} align="stretch">
                 {/* 3D Body Part Selector */}
-                <FormControl id="bodyPart" isRequired>
+                <FormControl id="bodyPart">
                   <Flex 
                     justifyContent="space-between" 
                     alignItems="center" 
@@ -293,6 +293,7 @@ export const NewInjury = () => {
                       <Select
                         placeholder="Select body parts"
                         value=""
+                        name="bodyPartSelect"
                         onChange={(e) => {
                           if (e.target.value) {
                             handleBodyPartSelect(e.target.value, true);
@@ -331,6 +332,7 @@ export const NewInjury = () => {
                   <FormLabel>Sport/Activity</FormLabel>
                   <Select
                     placeholder="Select sport"
+                    name="sport"
                     value={formData.sport}
                     onChange={(e) => setFormData({ ...formData, sport: e.target.value })}
                   >
@@ -346,6 +348,7 @@ export const NewInjury = () => {
                   <FormLabel>How did it happen?</FormLabel>
                   <Textarea
                     placeholder="Describe how the injury occurred..."
+                    name="cause"
                     value={formData.cause}
                     onChange={(e) => setFormData({ ...formData, cause: e.target.value })}
                   />
@@ -355,6 +358,7 @@ export const NewInjury = () => {
                   <FormLabel>Symptoms</FormLabel>
                   <Input
                     placeholder="Enter symptoms (comma-separated)"
+                    name="symptoms"
                     value={formData.symptoms}
                     onChange={(e) => setFormData({ ...formData, symptoms: e.target.value })}
                   />
