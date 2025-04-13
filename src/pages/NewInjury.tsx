@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Button,
@@ -14,33 +14,25 @@ import {
   HStack,
   Flex,
   useColorModeValue,
+  Divider,
+  Collapse,
+  useDisclosure,
+  Tag,
+  TagLabel,
+  Wrap,
+  WrapItem,
 } from '@chakra-ui/react';
-import { ChevronRightIcon } from '@chakra-ui/icons';
+import { ChevronRightIcon, ChevronDownIcon, ChevronUpIcon } from '@chakra-ui/icons';
 import { useNavigate, Link } from 'react-router-dom';
 import { analyzeInjury } from '../services/openai';
 import { addInjury } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import type { InjuryDetails } from '../types';
+import { BodyPartSelector } from '../components/3DModel/BodyPartSelector';
+import { bodyPartMapping } from '../utils/formatting';
 
-const BODY_PARTS = [
-  'Head',
-  'Neck',
-  'Shoulder',
-  'Upper Arm',
-  'Elbow',
-  'Forearm',
-  'Wrist',
-  'Hand',
-  'Chest',
-  'Upper Back',
-  'Lower Back',
-  'Hip',
-  'Thigh',
-  'Knee',
-  'Lower Leg',
-  'Ankle',
-  'Foot',
-];
+// Convert the mappings to an array of display names
+const BODY_PARTS = Object.values(bodyPartMapping);
 
 const SPORTS = [
   'Running',
@@ -60,20 +52,86 @@ const SPORTS = [
 export const NewInjury = () => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    bodyPart: '',
+    bodyParts: [] as string[],
     cause: '',
     sport: '',
     symptoms: '',
   });
   const [analysis, setAnalysis] = useState('');
   const [injuryId, setInjuryId] = useState<string | null>(null);
+  const { isOpen: is3DOpen, onToggle: toggle3D } = useDisclosure({ defaultIsOpen: true });
   
   const toast = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const handleBodyPartSelect = (bodyPart: string, isSelected: boolean) => {
+    if (isSelected) {
+      // Add body part if it's not already selected
+      if (!formData.bodyParts.includes(bodyPart)) {
+        setFormData({ 
+          ...formData, 
+          bodyParts: [...formData.bodyParts, bodyPart]
+        });
+      }
+    } else {
+      // Remove body part
+      setFormData({ 
+        ...formData, 
+        bodyParts: formData.bodyParts.filter(part => part !== bodyPart)
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that at least one body part is selected
+    if (formData.bodyParts.length === 0) {
+      toast({
+        title: 'Selection required',
+        description: 'Please select at least one body part',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    // Additional validation for required fields
+    if (!formData.sport) {
+      toast({
+        title: 'Sport/Activity required',
+        description: 'Please select a sport or activity',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!formData.cause) {
+      toast({
+        title: 'Cause required',
+        description: 'Please describe how the injury occurred',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (!formData.symptoms) {
+      toast({
+        title: 'Symptoms required',
+        description: 'Please enter at least one symptom',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    
     setLoading(true);
 
     if (!user) {
@@ -89,15 +147,20 @@ export const NewInjury = () => {
     }
 
     try {
+      console.log('Submitting form data:', formData);
+      const bodyPartsString = formData.bodyParts.join(', ');
+      
       const injuryDetails: InjuryDetails = {
-        bodyPart: formData.bodyPart,
+        bodyPart: bodyPartsString,
         cause: formData.cause,
         date: new Date(),
         sport: formData.sport,
         symptoms: formData.symptoms.split(',').map(s => s.trim()),
       };
 
+      console.log('Calling analyzeInjury with:', injuryDetails);
       const result = await analyzeInjury(injuryDetails);
+      console.log('Analysis result:', result);
       setAnalysis(result || '');
       
       // Save to Firebase
@@ -119,6 +182,7 @@ export const NewInjury = () => {
         isClosable: true,
       });
     } catch (error) {
+      console.error('Error analyzing injury:', error);
       toast({
         title: 'Error reporting injury',
         description: error instanceof Error ? error.message : 'Unknown error occurred',
@@ -134,7 +198,7 @@ export const NewInjury = () => {
   const handleReset = () => {
     // Reset the form to report a new injury
     setFormData({
-      bodyPart: '',
+      bodyParts: [],
       cause: '',
       sport: '',
       symptoms: '',
@@ -182,21 +246,86 @@ export const NewInjury = () => {
             </Box>
           ) : (
             <form onSubmit={handleSubmit}>
-              <VStack spacing={4} align="stretch">
-                <FormControl isRequired>
-                  <FormLabel>Body Part</FormLabel>
-                  <Select
-                    placeholder="Select body part"
-                    value={formData.bodyPart}
-                    onChange={(e) => setFormData({ ...formData, bodyPart: e.target.value })}
+              <VStack spacing={6} align="stretch">
+                {/* 3D Body Part Selector */}
+                <FormControl id="bodyPart" isRequired>
+                  <Flex 
+                    justifyContent="space-between" 
+                    alignItems="center" 
+                    onClick={toggle3D} 
+                    cursor="pointer"
+                    mb={2}
                   >
-                    {BODY_PARTS.map((part) => (
-                      <option key={part} value={part}>
-                        {part}
-                      </option>
-                    ))}
-                  </Select>
+                    <FormLabel margin="0" cursor="pointer">Select Injured Body Parts</FormLabel>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      rightIcon={is3DOpen ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                    >
+                      {is3DOpen ? "Hide 3D Model" : "Show 3D Model"}
+                    </Button>
+                  </Flex>
+                  
+                  <Collapse in={is3DOpen} animateOpacity>
+                    <BodyPartSelector 
+                      selectedBodyParts={formData.bodyParts} 
+                      onSelectBodyPart={handleBodyPartSelect}
+                      bodyParts={BODY_PARTS}
+                    />
+                  </Collapse>
+                  
+                  {!is3DOpen && formData.bodyParts.length > 0 && (
+                    <Box p={3} bg="blue.50" borderRadius="md" mt={2}>
+                      <Text fontWeight="medium" mb={2}>
+                        Selected: {formData.bodyParts.length} body part{formData.bodyParts.length !== 1 ? 's' : ''}
+                      </Text>
+                      <Wrap>
+                        {formData.bodyParts.map(part => (
+                          <WrapItem key={part}>
+                            <Tag colorScheme="blue" size="md">{part}</Tag>
+                          </WrapItem>
+                        ))}
+                      </Wrap>
+                    </Box>
+                  )}
+                  
+                  {!is3DOpen && formData.bodyParts.length === 0 && (
+                    <Box>
+                      <Select
+                        placeholder="Select body parts"
+                        value=""
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            handleBodyPartSelect(e.target.value, true);
+                          }
+                        }}
+                        isInvalid={formData.bodyParts.length === 0}
+                      >
+                        {BODY_PARTS.map((part) => (
+                          <option key={part} value={part}>
+                            {part}
+                          </option>
+                        ))}
+                      </Select>
+                      {formData.bodyParts.length === 0 && (
+                        <Text fontSize="sm" color="red.500" mt={1}>
+                          Please select at least one body part
+                        </Text>
+                      )}
+                    </Box>
+                  )}
+                  
+                  {/* Hidden field to satisfy form validation */}
+                  <Input 
+                    type="hidden" 
+                    name="bodyParts" 
+                    value={formData.bodyParts.join(',')} 
+                    aria-hidden="true"
+                    isRequired={false}
+                  />
                 </FormControl>
+
+                <Divider />
 
                 <FormControl isRequired>
                   <FormLabel>Sport/Activity</FormLabel>

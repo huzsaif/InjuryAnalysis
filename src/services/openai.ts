@@ -1,9 +1,20 @@
 import OpenAI from 'openai';
 
+// Clean the API key to handle any line breaks or whitespace
+const cleanApiKey = (key: string | undefined): string => {
+  if (!key) return '';
+  // Replace newlines, spaces, tabs with empty string
+  return key.replace(/[\n\r\s\t]+/g, '');
+};
+
+const apiKey = cleanApiKey(import.meta.env.VITE_OPENAI_API_KEY);
+
 const openai = new OpenAI({
-  apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+  apiKey,
   dangerouslyAllowBrowser: true // Note: In production, calls should be made through a backend
 });
+
+console.log('OpenAI API key length:', apiKey.length);
 
 export interface InjuryDetails {
   bodyPart: string;
@@ -14,32 +25,59 @@ export interface InjuryDetails {
 }
 
 export const analyzeInjury = async (injuryDetails: InjuryDetails) => {
-  const response = await openai.chat.completions.create({
-    model: "gpt-4",
-    messages: [
-      {
-        role: "system",
-        content: "You are a sports injury analysis assistant. Provide helpful information about possible injuries and recovery plans, but always remind users to seek professional medical advice for proper diagnosis and treatment."
-      },
-      {
-        role: "user",
-        content: `Analyze this injury:
-          Body Part: ${injuryDetails.bodyPart}
-          Cause: ${injuryDetails.cause}
-          Date: ${injuryDetails.date instanceof Date ? injuryDetails.date.toLocaleDateString() : 'Unknown date'}
-          Sport: ${injuryDetails.sport}
-          Symptoms: ${injuryDetails.symptoms.join(", ")}
-          
-          Please provide:
-          1. Possible injuries (not as diagnosis)
-          2. Initial recovery recommendations
-          3. Warning signs that would require immediate medical attention`
-      }
-    ],
-    temperature: 0.7,
-  });
-
-  return response.choices[0].message.content;
+  try {
+    console.log('Starting analyzeInjury with data:', JSON.stringify(injuryDetails, null, 2));
+    console.log('OpenAI API Key length:', openai.apiKey?.length || 'Not set');
+    
+    // Ensure date is properly formatted
+    const formattedDate = injuryDetails.date instanceof Date 
+      ? injuryDetails.date.toLocaleDateString() 
+      : 'Unknown date';
+    
+    // Ensure symptoms are properly joined
+    const symptomsString = Array.isArray(injuryDetails.symptoms) 
+      ? injuryDetails.symptoms.join(", ") 
+      : injuryDetails.symptoms || '';
+    
+    console.log('Creating OpenAI request...');
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are a sports injury analysis assistant. Provide helpful information about possible injuries and recovery plans, but always remind users to seek professional medical advice for proper diagnosis and treatment."
+        },
+        {
+          role: "user",
+          content: `Analyze this injury:
+            Body Part: ${injuryDetails.bodyPart}
+            Cause: ${injuryDetails.cause}
+            Date: ${formattedDate}
+            Sport: ${injuryDetails.sport}
+            Symptoms: ${symptomsString}
+            
+            Please provide:
+            1. Possible injuries (not as diagnosis)
+            2. Initial recovery recommendations
+            3. Warning signs that would require immediate medical attention`
+        }
+      ],
+      temperature: 0.7,
+    });
+    
+    console.log('Received response from OpenAI:', response.choices.length > 0 ? 'Success' : 'No choices returned');
+    
+    const content = response.choices[0].message.content;
+    if (!content) {
+      console.error('OpenAI returned empty content');
+      throw new Error('Failed to generate analysis. Please try again.');
+    }
+    
+    return content;
+  } catch (error) {
+    console.error('Error in analyzeInjury:', error);
+    throw error;
+  }
 };
 
 export const generateRecoveryPlan = async (
