@@ -9,7 +9,7 @@ const FALLBACK_HTML = `
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Injury Analysis</title>
+    <title>RecovrAI</title>
   </head>
   <body>
     <div id="root"></div>
@@ -136,5 +136,20 @@ const notFoundRedirectContent = `
 
 fs.writeFileSync(path.join(distPath, '404.html'), notFoundRedirectContent);
 console.log('Created 404.html with redirect script');
+
+console.log('Post-build processing completed successfully!');
+
+// Simple post-build script to ensure CSR works correctly on Render
+const fs = require('fs');
+const path = require('path');
+
+// Create a simplified version of the HTML for the client router to work with
+const indexHtml = fs.readFileSync(path.resolve(__dirname, 'dist', 'index.html'), 'utf8');
+
+// Replace title
+const updatedHtml = indexHtml.replace(/<title>.*?<\/title>/, '<title>RecovrAI</title>');
+
+// Write the updated HTML back
+fs.writeFileSync(path.resolve(__dirname, 'dist', 'index.html'), updatedHtml, 'utf8');
 
 console.log('Post-build processing completed successfully!'); 
