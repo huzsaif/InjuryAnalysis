@@ -102,6 +102,7 @@ export const BodyPartSelector: React.FC<BodyPartSelectorProps> = ({
             value={selectedBodyParts.join(',')} 
             tabIndex={-1}
             aria-hidden={false}
+            readOnly
           />
         </VisuallyHidden>
       </FormControl>

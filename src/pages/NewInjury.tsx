@@ -321,6 +321,7 @@ export const NewInjury = () => {
                     value={formData.bodyParts.join(',')} 
                     aria-hidden="true"
                     isRequired={false}
+                    readOnly
                   />
                 </FormControl>
 
