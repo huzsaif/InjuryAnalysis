@@ -99,37 +99,23 @@ export const NewInjury = () => {
     }
 
     // Additional validation for required fields
-    if (!formData.sport) {
-      toast({
-        title: 'Sport/Activity required',
-        description: 'Please select a sport or activity',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+    const requiredFields = [
+      { name: 'sport', message: 'Please select a sport or activity' },
+      { name: 'cause', message: 'Please describe how the injury occurred' },
+      { name: 'symptoms', message: 'Please enter at least one symptom' }
+    ];
 
-    if (!formData.cause) {
-      toast({
-        title: 'Cause required',
-        description: 'Please describe how the injury occurred',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
-
-    if (!formData.symptoms) {
-      toast({
-        title: 'Symptoms required',
-        description: 'Please enter at least one symptom',
-        status: 'warning',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
+    for (const field of requiredFields) {
+      if (!formData[field.name as keyof typeof formData]) {
+        toast({
+          title: `${field.name.charAt(0).toUpperCase() + field.name.slice(1)} required`,
+          description: field.message,
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
     }
     
     setLoading(true);
@@ -155,8 +141,21 @@ export const NewInjury = () => {
         cause: formData.cause,
         date: new Date(),
         sport: formData.sport,
-        symptoms: formData.symptoms.split(',').map(s => s.trim()),
+        symptoms: formData.symptoms.split(',').map(s => s.trim()).filter(s => s.length > 0),
       };
+
+      // Validate symptoms after processing
+      if (injuryDetails.symptoms.length === 0) {
+        toast({
+          title: 'Symptoms required',
+          description: 'Please enter at least one valid symptom',
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        });
+        setLoading(false);
+        return;
+      }
 
       console.log('Calling analyzeInjury with:', injuryDetails);
       const result = await analyzeInjury(injuryDetails);

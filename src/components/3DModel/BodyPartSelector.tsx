@@ -21,6 +21,8 @@ import {
   TagLabel,
   TagCloseButton,
   Input,
+  VisuallyHidden,
+  FormControl,
 } from '@chakra-ui/react';
 import { ModelViewer } from './ModelViewer';
 import { BodyPart } from '../../types';
@@ -91,16 +93,18 @@ export const BodyPartSelector: React.FC<BodyPartSelectorProps> = ({
       bg={bgColor}
       overflow="hidden"
     >
-      {/* Hidden input for form validation purposes */}
-      <Input 
-        type="text" 
-        name="bodyPartsValidation" 
-        value={selectedBodyParts.join(',')} 
-        display="none" 
-        aria-hidden="true"
-        readOnly
-        isInvalid={selectedBodyParts.length === 0}
-      />
+      {/* Accessible hidden input for form validation */}
+      <FormControl>
+        <VisuallyHidden>
+          <Input 
+            type="text" 
+            name="bodyPartsValidation" 
+            value={selectedBodyParts.join(',')} 
+            tabIndex={-1}
+            aria-hidden={false}
+          />
+        </VisuallyHidden>
+      </FormControl>
 
       <Tabs isFitted variant="enclosed">
         <TabList>
