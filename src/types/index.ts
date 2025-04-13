@@ -35,6 +35,8 @@ export interface RecoveryPlan {
   milestones: Milestone[];
   createdAt: Date;
   updatedAt: Date;
+  lastAdjusted?: Date;
+  adjustmentHistory?: ExerciseAdjustment[];
 }
 
 export interface Exercise {
@@ -44,6 +46,23 @@ export interface Exercise {
   reps: number;
   frequency: string;
   notes?: string;
+  intensity?: number; // 1-5 scale
+  difficulty?: number; // User-reported difficulty 1-10
+  contraindications?: string[];
+  equipment?: string[];
+  targetArea?: string;
+  adjustmentReason?: string;
+}
+
+export interface ExerciseAdjustment {
+  date: Date;
+  exerciseName: string;
+  adjustmentType: 'increase' | 'decrease' | 'maintain';
+  reason: string;
+  previousSets: number;
+  previousReps: number;
+  newSets: number;
+  newReps: number;
 }
 
 export interface Milestone {
@@ -70,14 +89,47 @@ export interface CompletedExercise {
   completed: boolean;
   difficulty: number;
   notes?: string;
+  painDuring?: number;
+  painAfter?: number;
+  modifications?: string;
 }
 
 export interface Alert {
   id: string;
   injuryId: string;
-  type: 'warning' | 'milestone' | 'recommendation';
+  type: 'warning' | 'milestone' | 'recommendation' | 'adjustment';
   message: string;
   createdAt: Date;
   read: boolean;
   action?: string;
 }
+
+export type BodyPart = 
+  | 'head' 
+  | 'neck'
+  | 'chest'  
+  | 'stomach'
+  | 'left_shoulder' 
+  | 'left_upper_arm' 
+  | 'left_elbow' 
+  | 'left_forearm' 
+  | 'left_wrist' 
+  | 'left_hand' 
+  | 'right_shoulder' 
+  | 'right_upper_arm' 
+  | 'right_elbow' 
+  | 'right_forearm' 
+  | 'right_wrist' 
+  | 'right_hand' 
+  | 'left_hip' 
+  | 'left_thigh' 
+  | 'left_knee' 
+  | 'left_calf' 
+  | 'left_ankle' 
+  | 'left_foot' 
+  | 'right_hip' 
+  | 'right_thigh' 
+  | 'right_knee' 
+  | 'right_calf' 
+  | 'right_ankle' 
+  | 'right_foot';

@@ -1,0 +1,116 @@
+/* 3D model container styling */
+.model-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: none;
+}
+
+/* Make canvas responsive */
+.model-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  outline: none;
+}
+
+/* Tooltip styling */
+.body-part-tooltip {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 100;
+  pointer-events: none;
+  white-space: nowrap;
+  transform: translateY(-100%);
+}
+
+/* Pulse animation for selected body part */
+@keyframes pulse {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+}
+
+.selected-part {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+/* Loading indicator styling */
+.loading-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+/* Controls hint overlay */
+.controls-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #333;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .controls-hint {
+    font-size: 10px;
+  }
+}
+
+/* Selection highlight */
+.highlight {
+  outline: 2px solid #3182ce;
+  outline-offset: 2px;
+}
+
+/* Anatomy layer controls */
+.layer-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  padding: 5px;
+  z-index: 5;
+}
+
+.layer-button {
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 3px 6px;
+  margin: 2px;
+  border-radius: 3px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.layer-button.active {
+  background-color: #3182ce;
+  color: white;
+  border-color: #2c5282;
+} 

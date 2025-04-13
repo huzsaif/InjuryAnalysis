@@ -25,10 +25,11 @@ import { DeleteIcon, InfoIcon } from '@chakra-ui/icons';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
-import { getUserInjuries, getInjuryProgress, deleteInjury } from '../services/firebase';
+import { getUserInjuries, getInjuryProgress, deleteInjury, getRecoveryPlan } from '../services/firebase';
 import { generateRecoveryPlan } from '../services/openai';
 import { useAuth } from '../contexts/AuthContext';
-import type { Injury, ProgressEntry } from '../types';
+import type { Injury, ProgressEntry, RecoveryPlan, Exercise } from '../types';
+import { ExerciseAdjustment } from '../components/ExerciseAdjustment';
 
 export const Dashboard = () => {
   const [injuries, setInjuries] = useState<Injury[]>([]);
@@ -39,6 +40,7 @@ export const Dashboard = () => {
   const [deletingInjury, setDeletingInjury] = useState<string | null>(null);
   const [generatingPlan, setGeneratingPlan] = useState(false);
   const [recoveryPlan, setRecoveryPlan] = useState<string | null>(null);
+  const [recoveryPlanData, setRecoveryPlanData] = useState<RecoveryPlan | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null) as React.RefObject<HTMLButtonElement>;
   
@@ -223,6 +225,39 @@ Current Status:
     };
     fetchProgress();
   }, [selectedInjury, toast]);
+
+  useEffect(() => {
+    const fetchRecoveryPlan = async () => {
+      if (selectedInjury) {
+        try {
+          const plan = await getRecoveryPlan(selectedInjury);
+          setRecoveryPlanData(plan);
+        } catch (error) {
+          console.error('Error fetching recovery plan:', error);
+        }
+      }
+    };
+    
+    fetchRecoveryPlan();
+  }, [selectedInjury]);
+
+  const handleExerciseAdjustmentComplete = (exercises: Exercise[], summary: string) => {
+    if (recoveryPlanData) {
+      setRecoveryPlanData({
+        ...recoveryPlanData,
+        exercises,
+        lastAdjusted: new Date()
+      });
+      
+      toast({
+        title: 'Exercise plan adjusted',
+        description: 'Your exercise program has been updated based on your progress',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -458,9 +493,27 @@ Current Status:
               borderRadius="lg" 
               bg={bgColor}
               borderColor={borderColor}
+              mb={4}
             >
               <Heading size="md" mb={4}>Your Recovery Plan</Heading>
               <Text whiteSpace="pre-wrap" fontSize="md">{recoveryPlan}</Text>
+            </Box>
+          )}
+          
+          {/* Smart Exercise Adjustment Section */}
+          {recoveryPlanData && recoveryPlanData.exercises && recoveryPlanData.exercises.length > 0 && (
+            <Box 
+              p={6} 
+              borderWidth={1} 
+              borderRadius="lg" 
+              bg={bgColor}
+              borderColor={borderColor}
+            >
+              <ExerciseAdjustment 
+                injuryId={selectedInjury || ''}
+                exercises={recoveryPlanData.exercises}
+                onAdjustmentComplete={handleExerciseAdjustmentComplete}
+              />
             </Box>
           )}
         </VStack>

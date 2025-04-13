@@ -10,9 +10,10 @@ import {
   Timestamp,
   limit,
   writeBatch,
+  updateDoc,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
-import type { Injury, ProgressEntry, RecoveryPlan } from '../types';
+import type { Injury, ProgressEntry, RecoveryPlan, Exercise, ExerciseAdjustment } from '../types';
 import { getAuth } from 'firebase/auth';
 
 export const addInjury = async (injury: Omit<Injury, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -243,6 +244,131 @@ export const deleteInjury = async (injuryId: string) => {
     return true;
   } catch (error) {
     console.error('Error deleting injury:', error);
+    throw error;
+  }
+};
+
+export const updateRecoveryPlanWithExercises = async (planId: string, exercises: Exercise[], adjustmentSummary: string) => {
+  try {
+    const planRef = doc(db, 'recoveryPlans', planId);
+    const planDoc = await getDoc(planRef);
+    
+    if (!planDoc.exists()) {
+      throw new Error('Recovery plan not found');
+    }
+    
+    const planData = planDoc.data();
+    const adjustmentHistory = planData.adjustmentHistory || [];
+    
+    // Create a new adjustment history entry
+    const newAdjustment: ExerciseAdjustment[] = exercises.map((exercise, index) => {
+      const oldExercise = planData.exercises[index] || { sets: 0, reps: 0 };
+      return {
+        date: new Date(),
+        exerciseName: exercise.name,
+        adjustmentType: 
+          oldExercise.sets < exercise.sets || oldExercise.reps < exercise.reps 
+            ? 'increase' 
+            : oldExercise.sets > exercise.sets || oldExercise.reps > exercise.reps 
+              ? 'decrease' 
+              : 'maintain',
+        reason: exercise.adjustmentReason || 'Based on recent progress data',
+        previousSets: oldExercise.sets,
+        previousReps: oldExercise.reps,
+        newSets: exercise.sets,
+        newReps: exercise.reps
+      };
+    });
+    
+    // Update the recovery plan
+    await updateDoc(planRef, {
+      exercises,
+      lastAdjusted: Timestamp.now(),
+      adjustmentHistory: [...adjustmentHistory, ...newAdjustment],
+      updatedAt: Timestamp.now()
+    });
+    
+    // Create an alert about the adjustment
+    if (adjustmentSummary) {
+      const alertRef = await addDoc(collection(db, 'alerts'), {
+        injuryId: planData.injuryId,
+        type: 'adjustment',
+        message: adjustmentSummary,
+        createdAt: Timestamp.now(),
+        read: false,
+        action: 'View your updated exercise plan'
+      });
+      
+      console.log('Created exercise adjustment alert:', alertRef.id);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating recovery plan with adjusted exercises:', error);
+    throw error;
+  }
+};
+
+export const getProgressForSmartAdjustment = async (injuryId: string) => {
+  try {
+    // Get the last 10 progress entries for smart adjustment
+    const q = query(
+      collection(db, 'progress'),
+      where('injuryId', '==', injuryId),
+      orderBy('date', 'desc'),
+      limit(10)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const progress = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        date: data.date.toDate(),
+      } as ProgressEntry;
+    });
+    
+    return progress;
+  } catch (error) {
+    console.error('Error getting progress for smart adjustment:', error);
+    throw error;
+  }
+};
+
+export const generateSmartAdjustedExercises = async (injuryId: string) => {
+  try {
+    // Get the current recovery plan
+    const recoveryPlan = await getRecoveryPlan(injuryId);
+    if (!recoveryPlan || !recoveryPlan.exercises || recoveryPlan.exercises.length === 0) {
+      throw new Error('No recovery plan or exercises found');
+    }
+    
+    // Get progress data for analysis
+    const progressData = await getProgressForSmartAdjustment(injuryId);
+    if (progressData.length < 2) {
+      throw new Error('Not enough progress data for smart adjustment (minimum 2 entries required)');
+    }
+    
+    // Import the exercise adjustment utility (without direct import to avoid circular dependencies)
+    const { generateSmartExerciseProgram } = await import('../utils/exerciseAdjustment');
+    
+    // Generate adjusted exercises
+    const { exercises, adjustmentSummary } = generateSmartExerciseProgram(
+      recoveryPlan.exercises,
+      progressData
+    );
+    
+    // Update the recovery plan with the adjusted exercises
+    await updateRecoveryPlanWithExercises(recoveryPlan.id, exercises, adjustmentSummary);
+    
+    return { 
+      exercises,
+      adjustmentSummary,
+      lastAdjusted: new Date()
+    };
+  } catch (error) {
+    console.error('Error generating smart adjusted exercises:', error);
     throw error;
   }
 };

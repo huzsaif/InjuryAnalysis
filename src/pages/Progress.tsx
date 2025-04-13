@@ -38,6 +38,8 @@ export const Progress = () => {
     mobility: 5,
     swelling: 5,
     notes: '',
+    exerciseDifficulty: 5,
+    exerciseNotes: ''
   });
   const [completedExercises] = useState<CompletedExercise[]>([]);
   
@@ -141,7 +143,14 @@ export const Progress = () => {
         mobility: formData.mobility,
         swelling: formData.swelling,
         notes: formData.notes,
-        exercises: completedExercises,
+        exercises: [
+          {
+            exerciseId: 'overall',
+            completed: true,
+            difficulty: formData.exerciseDifficulty || 5,
+            notes: formData.exerciseNotes || '',
+          }
+        ],
       });
 
       console.log('Progress entry added successfully');
@@ -285,6 +294,46 @@ export const Progress = () => {
                     {formData.swelling}
                   </Text>
                 </HStack>
+              </FormControl>
+
+              <FormControl mt={6}>
+                <FormLabel>Exercise Difficulty</FormLabel>
+                <Text fontSize="sm" color="gray.500" mb={3}>
+                  How difficult were your prescribed exercises today? This helps our system adjust your program intelligently.
+                </Text>
+                <HStack spacing={4}>
+                  <Slider
+                    value={formData.exerciseDifficulty || 5}
+                    min={1}
+                    max={10}
+                    step={1}
+                    onChange={(value) => setFormData({ ...formData, exerciseDifficulty: value })}
+                  >
+                    <SliderTrack>
+                      <SliderFilledTrack />
+                    </SliderTrack>
+                    <SliderThumb />
+                  </Slider>
+                  <Text w="40px" textAlign="center">
+                    {formData.exerciseDifficulty || 5}
+                  </Text>
+                </HStack>
+                <HStack justifyContent="space-between" width="100%" fontSize="xs" color="gray.500" mt={1}>
+                  <Text>Very Easy</Text>
+                  <Text>Moderate</Text>
+                  <Text>Very Hard</Text>
+                </HStack>
+              </FormControl>
+
+              <FormControl mt={6}>
+                <FormLabel>Exercise Feedback</FormLabel>
+                <Textarea
+                  placeholder="Did you have any issues with specific exercises? Did you need to modify any exercises? Any pain during particular movements?"
+                  value={formData.exerciseNotes || ''}
+                  onChange={(e) => setFormData({ ...formData, exerciseNotes: e.target.value })}
+                  size="md"
+                  minH="100px"
+                />
               </FormControl>
 
               <FormControl>

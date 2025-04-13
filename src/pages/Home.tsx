@@ -8,9 +8,11 @@ import {
   SimpleGrid,
   Icon,
   useColorModeValue,
+  HStack,
 } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 import { FaClipboardCheck, FaChartLine, FaBrain } from 'react-icons/fa';
+import { useAuth } from '../contexts/AuthContext';
 
 const Feature = ({ icon, title, description }: { icon: any; title: string; description: string }) => {
   const bg = useColorModeValue('white', 'gray.800');
@@ -35,6 +37,8 @@ const Feature = ({ icon, title, description }: { icon: any; title: string; descr
 };
 
 export const Home = () => {
+  const { user } = useAuth();
+
   return (
     <Box py={20} width="100%">
       <Container maxW="100%">
@@ -52,15 +56,40 @@ export const Home = () => {
             Get personalized injury recovery plans powered by AI. Track your progress,
             monitor symptoms, and stay on top of your rehabilitation journey.
           </Text>
-          <Button
-            as={RouterLink}
-            to="/new-injury"
-            size="lg"
-            colorScheme="blue"
-            px={8}
-          >
-            Report an Injury
-          </Button>
+          <HStack spacing={4}>
+            {user ? (
+              <>
+                <Button
+                  as={RouterLink}
+                  to="/dashboard"
+                  size="lg"
+                  colorScheme="blue"
+                  px={8}
+                >
+                  Go to Dashboard
+                </Button>
+                <Button
+                  as={RouterLink}
+                  to="/new-injury"
+                  size="lg"
+                  colorScheme="green"
+                  px={8}
+                >
+                  Report an Injury
+                </Button>
+              </>
+            ) : (
+              <Button
+                as={RouterLink}
+                to="/login"
+                size="lg"
+                colorScheme="blue"
+                px={8}
+              >
+                Get Started
+              </Button>
+            )}
+          </HStack>
         </VStack>
 
         <SimpleGrid columns={{ base: 1, md: 3 }} spacing={10}>

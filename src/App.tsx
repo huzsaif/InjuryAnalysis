@@ -56,19 +56,15 @@ function App() {
           <Router>
             <Routes>
               <Route path="/" element={<Layout />}>
-                {/* Redirect from home to login page or dashboard if logged in */}
-                <Route index element={
-                  <RouteBasedOnAuth 
-                    authenticated={<Navigate to="/dashboard" replace />} 
-                    unauthenticated={<Navigate to="/login" replace />} 
-                  />
-                } />
+                {/* Redirect from root to home page */}
+                <Route index element={<Navigate to="/home" replace />} />
                 <Route path="login" element={
                   <RouteBasedOnAuth 
                     authenticated={<Navigate to="/dashboard" replace />}
                     unauthenticated={<Login />}
                   />
                 } />
+                {/* Home page accessible to all */}
                 <Route path="home" element={<Home />} />
                 
                 {/* Protected routes */}

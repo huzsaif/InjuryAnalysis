@@ -1,3 +1,7 @@
+/* Import 3D Model styling */
+@import './components/3DModel/3DModel.css';
+
+/* Rest of the CSS file */
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;

@@ -24,8 +24,8 @@ export const Layout = () => {
         <Container maxW="100%" px={4}>
           <Flex justify="space-between" align="center">
             <Flex gap={8} align="center">
-              <RouterLink to={user ? "/dashboard" : "/"}>
-                <Heading size="md" color={colorMode === 'light' ? 'blue.600' : 'blue.300'}>
+              <RouterLink to="/home">
+                <Heading size="md" color={colorMode === 'light' ? 'blue.600' : 'blue.300'} cursor="pointer">
                   Injury Analysis
                 </Heading>
               </RouterLink>
@@ -35,7 +35,6 @@ export const Layout = () => {
                 <>
                   <ChakraLink as={RouterLink} to="/dashboard">Dashboard</ChakraLink>
                   <ChakraLink as={RouterLink} to="/new-injury">Report Injury</ChakraLink>
-                  <ChakraLink as={RouterLink} to="/home">Home</ChakraLink>
                 </>
               )}
             </Flex>
