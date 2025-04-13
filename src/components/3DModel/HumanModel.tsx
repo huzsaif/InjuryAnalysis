@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, forwardRef } from 'react';
 import { useFrame, extend } from '@react-three/fiber';
 import { BodyPart } from '../../types';
 import * as THREE from 'three';
@@ -32,11 +32,13 @@ const BoxGeometryElement = () => <boxGeometry />;
 // @ts-ignore
 const MeshStandardMaterialElement = (props: any) => <meshStandardMaterial {...props} />;
 // @ts-ignore
-const Group = (props: any) => <group {...props} />;
-// @ts-ignore
 const AmbientLight = (props: any) => <ambientLight {...props} />;
 // @ts-ignore
 const DirectionalLight = (props: any) => <directionalLight {...props} />;
+
+// Using forwardRef to properly handle refs
+// @ts-ignore
+const Group = forwardRef((props: any, ref) => <group ref={ref} {...props} />);
 
 // Body part mesh component
 const BodyPartMesh: React.FC<BodyPartProps> = ({

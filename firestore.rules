@@ -35,5 +35,12 @@ service cloud.firestore {
       allow create: if isAuthenticated() && ownsInjury(request.resource.data.injuryId);
       allow update, delete: if isAuthenticated() && ownsInjury(resource.data.injuryId);
     }
+
+    // Recovery Plans collection
+    match /recoveryPlans/{planId} {
+      allow read: if isAuthenticated() && ownsInjury(resource.data.injuryId);
+      allow create: if isAuthenticated() && ownsInjury(request.resource.data.injuryId);
+      allow update, delete: if isAuthenticated() && ownsInjury(resource.data.injuryId);
+    }
   }
 }
