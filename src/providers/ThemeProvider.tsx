@@ -1,11 +1,14 @@
-import { ChakraProvider, extendTheme } from '@chakra-ui/react';
+import { ChakraProvider, extendTheme, ColorModeScript } from '@chakra-ui/react';
 import { mode } from '@chakra-ui/theme-tools';
 
+const config = {
+  initialColorMode: 'light',
+  useSystemColorMode: true,
+  cssVarPrefix: 'recoverai',
+};
+
 const theme = extendTheme({
-  config: {
-    initialColorMode: 'light',
-    useSystemColorMode: false,
-  },
+  config,
   styles: {
     global: (props: any) => ({
       html: {
@@ -20,6 +23,8 @@ const theme = extendTheme({
         margin: 0,
         padding: 0,
         bg: mode('gray.50', 'gray.900')(props),
+        color: mode('gray.800', 'whiteAlpha.900')(props),
+        transition: 'background-color 0.2s, color 0.2s',
       },
       '#root': {
         width: '100%',
@@ -40,6 +45,18 @@ const theme = extendTheme({
       800: '#1565c0',
       900: '#0d47a1',
     },
+    navy: {
+      50: '#e6eaf0',
+      100: '#c7d0dc',
+      200: '#a5b3c7',
+      300: '#8295b3',
+      400: '#607fa3',
+      500: '#496991',
+      600: '#375380',
+      700: '#254070',
+      800: '#132e60',
+      900: '#0c2340', // Navy blue to match the logo
+    },
   },
   components: {
     Button: {
@@ -56,5 +73,10 @@ const theme = extendTheme({
 });
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  return <ChakraProvider theme={theme}>{children}</ChakraProvider>;
+  return (
+    <>
+      <ColorModeScript initialColorMode={theme.config.initialColorMode} />
+      <ChakraProvider theme={theme}>{children}</ChakraProvider>
+    </>
+  );
 }; 
