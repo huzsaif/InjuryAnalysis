@@ -73,7 +73,7 @@ export const analyzeInjury = async (injuryDetails: InjuryDetails) => {
         messages: [
           {
             role: "system",
-            content: "You are a sports injury analysis assistant. Provide helpful information about possible injuries and recovery plans, but always remind users to seek professional medical advice for proper diagnosis and treatment."
+            content: "You are RecovrAI, a specialized assistant for sports injury recovery. Provide helpful information about possible injuries and recovery plans, but always remind users to seek professional medical advice for proper diagnosis and treatment."
           },
           {
             role: "user",
@@ -156,7 +156,7 @@ export const generateRecoveryPlan = async (
       messages: [
         {
           role: "system",
-          content: "You are a sports injury recovery specialist. Create personalized recovery plans while emphasizing the importance of professional medical guidance."
+          content: "You are RecovrAI, a specialized assistant for sports injury recovery. Create personalized recovery plans while emphasizing the importance of professional medical guidance."
         },
         {
           role: "user",
@@ -202,7 +202,7 @@ export const analyzeProgress = async (
     messages: [
       {
         role: "system",
-        content: "You are a recovery progress analyst. Analyze recovery trends and provide recommendations."
+        content: "You are RecovrAI, a recovery progress analyst. Analyze recovery trends and provide recommendations based on the user's data."
       },
       {
         role: "user",

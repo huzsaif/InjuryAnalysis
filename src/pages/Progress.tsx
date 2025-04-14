@@ -24,7 +24,7 @@ import {
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { addProgressEntry, getInjury } from '../services/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import type { CompletedExercise, Injury } from '../types';
+import type { Injury } from '../types';
 
 export const Progress = () => {
   const { injuryId } = useParams<{ injuryId: string }>();

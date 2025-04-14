@@ -17,7 +17,6 @@ import {
   Alert,
   AlertIcon,
 } from '@chakra-ui/react';
-import { FaArrowUp, FaArrowDown, FaMinus } from 'react-icons/fa';
 import { generateSmartAdjustedExercises } from '../services/firebase';
 import type { Exercise } from '../types';
 
@@ -85,8 +84,8 @@ export const ExerciseAdjustment: React.FC<ExerciseAdjustmentProps> = ({
                     <Text><strong>Sets:</strong> {exercise.sets}</Text>
                     <Text><strong>Reps:</strong> {exercise.reps}</Text>
                   </HStack>
-                  {exercise.instructions && (
-                    <Text fontSize="sm" mb={2}>{exercise.instructions}</Text>
+                  {exercise.description && (
+                    <Text fontSize="sm" mb={2}>{exercise.description}</Text>
                   )}
                 </Box>
               ))}

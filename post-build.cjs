@@ -65,6 +65,7 @@ const redirectsContent = "/* /index.html 200";
 const distPath = path.join(__dirname, 'dist');
 const routesJsonPath = path.join(distPath, 'routes.json');
 const redirectsPath = path.join(distPath, '_redirects');
+const indexHtmlPath = path.join(distPath, 'index.html');
 
 // Ensure dist directory exists
 if (!fs.existsSync(distPath)) {
@@ -72,9 +73,15 @@ if (!fs.existsSync(distPath)) {
 }
 
 // Check if index.html exists, if not create a fallback
-if (!fs.existsSync(path.join(distPath, 'index.html'))) {
+if (!fs.existsSync(indexHtmlPath)) {
   console.log('No index.html found, creating fallback');
-  fs.writeFileSync(path.join(distPath, 'index.html'), FALLBACK_HTML);
+  fs.writeFileSync(indexHtmlPath, FALLBACK_HTML);
+} else {
+  // Update the title in the existing index.html
+  const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
+  const updatedHtml = indexHtml.replace(/<title>.*?<\/title>/, '<title>RecovrAI</title>');
+  fs.writeFileSync(indexHtmlPath, updatedHtml, 'utf8');
+  console.log('Updated title in index.html');
 }
 
 // Write routes.json
@@ -90,7 +97,6 @@ fs.writeFileSync(redirectsPath, redirectsContent);
 console.log('Created _redirects in dist directory for Netlify compatibility');
 
 // Copy index.html to 200.html for surge compatibility
-const indexHtmlPath = path.join(distPath, 'index.html');
 const notFoundHtmlPath = path.join(distPath, '200.html');
 
 if (fs.existsSync(indexHtmlPath)) {
@@ -136,20 +142,5 @@ const notFoundRedirectContent = `
 
 fs.writeFileSync(path.join(distPath, '404.html'), notFoundRedirectContent);
 console.log('Created 404.html with redirect script');
-
-console.log('Post-build processing completed successfully!');
-
-// Simple post-build script to ensure CSR works correctly on Render
-const fs = require('fs');
-const path = require('path');
-
-// Create a simplified version of the HTML for the client router to work with
-const indexHtml = fs.readFileSync(path.resolve(__dirname, 'dist', 'index.html'), 'utf8');
-
-// Replace title
-const updatedHtml = indexHtml.replace(/<title>.*?<\/title>/, '<title>RecovrAI</title>');
-
-// Write the updated HTML back
-fs.writeFileSync(path.resolve(__dirname, 'dist', 'index.html'), updatedHtml, 'utf8');
 
 console.log('Post-build processing completed successfully!'); 
