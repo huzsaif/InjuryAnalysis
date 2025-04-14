@@ -1,4 +1,3 @@
-import React from 'react';
 import { Box, Container, Flex, Button, HStack, useColorModeValue, Text, Spacer } from '@chakra-ui/react';
 import { Link as RouterLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';

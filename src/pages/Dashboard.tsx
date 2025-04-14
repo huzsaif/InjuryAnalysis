@@ -241,7 +241,7 @@ Current Status:
     fetchRecoveryPlan();
   }, [selectedInjury]);
 
-  const handleExerciseAdjustmentComplete = (exercises: Exercise[], summary: string) => {
+  const handleExerciseAdjustmentComplete = (exercises: Exercise[]) => {
     if (recoveryPlanData) {
       setRecoveryPlanData({
         ...recoveryPlanData,

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Image, Flex, Heading, useColorModeValue } from '@chakra-ui/react';
+import { Box, Image, Flex, Heading } from '@chakra-ui/react';
 import { Link as RouterLink } from 'react-router-dom';
 
 interface LogoProps {

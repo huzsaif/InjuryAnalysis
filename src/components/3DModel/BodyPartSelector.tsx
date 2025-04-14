@@ -12,7 +12,6 @@ import {
   useColorModeValue,
   HStack,
   Checkbox,
-  CheckboxGroup,
   VStack,
   Badge,
   Wrap,

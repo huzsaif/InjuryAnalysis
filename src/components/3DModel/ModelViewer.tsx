@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei';
 import HumanModel from './HumanModel';
-import { Box, Spinner, Center, Text, HStack, Tag, TagLabel, TagCloseButton, Wrap, WrapItem } from '@chakra-ui/react';
+import { Box, Spinner, Center, Text, Tag, TagLabel, TagCloseButton, Wrap, WrapItem } from '@chakra-ui/react';
 import { BodyPart } from '../../types';
 import { formatBodyPartName } from '../../utils/formatting';
 

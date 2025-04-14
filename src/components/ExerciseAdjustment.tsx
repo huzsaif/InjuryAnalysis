@@ -1,26 +1,12 @@
 import React, { useState } from 'react';
 import {
   Box,
-  Heading,
-  Text,
   Button,
+  Text,
+  Heading,
   VStack,
   HStack,
-  Badge,
-  Accordion,
-  AccordionItem,
-  AccordionButton,
-  AccordionPanel,
-  AccordionIcon,
-  Divider,
-  List,
-  ListItem,
-  ListIcon,
-  Tooltip,
   useColorModeValue,
-  Spinner,
-  Alert,
-  AlertIcon,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -28,12 +14,12 @@ import {
   ModalBody,
   ModalCloseButton,
   useDisclosure,
+  Alert,
+  AlertIcon,
 } from '@chakra-ui/react';
-import { ChevronUpIcon, ChevronDownIcon, InfoIcon, CheckCircleIcon } from '@chakra-ui/icons';
-import { FaDumbbell, FaArrowUp, FaArrowDown, FaMinus } from 'react-icons/fa';
-import { Exercise, ProgressEntry } from '../types';
-import { format } from 'date-fns';
+import { FaArrowUp, FaArrowDown, FaMinus } from 'react-icons/fa';
 import { generateSmartAdjustedExercises } from '../services/firebase';
+import type { Exercise } from '../types';
 
 interface ExerciseAdjustmentProps {
   injuryId: string;
@@ -77,95 +63,79 @@ export const ExerciseAdjustment: React.FC<ExerciseAdjustmentProps> = ({
     }
   };
   
-  const getAdjustmentIcon = (oldExercise: Exercise, newExercise: Exercise) => {
-    if (oldExercise.sets < newExercise.sets || oldExercise.reps < newExercise.reps) {
-      return <FaArrowUp color="green.500" />;
-    } else if (oldExercise.sets > newExercise.sets || oldExercise.reps > newExercise.reps) {
-      return <FaArrowDown color="red.500" />;
-    } else {
-      return <FaMinus color="gray.500" />;
-    }
-  };
-  
-  const getAdjustmentBadge = (oldExercise: Exercise, newExercise: Exercise) => {
-    if (oldExercise.sets < newExercise.sets || oldExercise.reps < newExercise.reps) {
-      return <Badge colorScheme="green">Increased</Badge>;
-    } else if (oldExercise.sets > newExercise.sets || oldExercise.reps > newExercise.reps) {
-      return <Badge colorScheme="red">Decreased</Badge>;
-    } else {
-      return <Badge colorScheme="gray">Maintained</Badge>;
-    }
-  };
-
   return (
-    <Box>
-      <VStack spacing={4} align="stretch">
-        <HStack justifyContent="space-between">
-          <Heading size="md">Smart Exercise Adjustment</Heading>
-          <Tooltip 
-            label="This feature analyzes your progress data and automatically adjusts your exercise program for optimal recovery"
-            aria-label="Smart exercise info"
-          >
-            <InfoIcon color="blue.500" />
-          </Tooltip>
-        </HStack>
+    <Box p={4} borderWidth={1} borderRadius="lg" borderColor={borderColor} bg={bgColor}>
+      <VStack align="stretch" spacing={4}>
+        <Heading size="md">Exercise Program</Heading>
         
-        <Text>
-          Automatically adjust your exercise program based on your recent progress and pain levels.
-          Smart adjustment requires at least two progress entries to analyze trends.
-        </Text>
-        
-        <Button 
-          leftIcon={<FaDumbbell />} 
-          colorScheme="blue" 
-          isLoading={loading}
-          onClick={handleGenerateAdjustment}
-        >
-          Generate Smart Adjustments
-        </Button>
-        
-        {error && (
-          <Alert status="error" borderRadius="md">
-            <AlertIcon />
-            {error}
-          </Alert>
+        {exercises.length > 0 ? (
+          <>
+            <Text>Your personalized exercise program consists of {exercises.length} exercise(s).</Text>
+            <VStack align="stretch" spacing={3}>
+              {exercises.map((exercise, index) => (
+                <Box 
+                  key={index} 
+                  p={3} 
+                  borderWidth={1} 
+                  borderRadius="md" 
+                  borderColor={borderColor}
+                >
+                  <Heading size="sm" mb={2}>{exercise.name}</Heading>
+                  <HStack spacing={6} mb={2}>
+                    <Text><strong>Sets:</strong> {exercise.sets}</Text>
+                    <Text><strong>Reps:</strong> {exercise.reps}</Text>
+                  </HStack>
+                  {exercise.instructions && (
+                    <Text fontSize="sm" mb={2}>{exercise.instructions}</Text>
+                  )}
+                </Box>
+              ))}
+            </VStack>
+            
+            <Button 
+              colorScheme="blue" 
+              isLoading={loading} 
+              onClick={handleGenerateAdjustment}
+            >
+              Adjust Based on Progress
+            </Button>
+            
+            {error && (
+              <Alert status="error">
+                <AlertIcon />
+                {error}
+              </Alert>
+            )}
+          </>
+        ) : (
+          <Text>No exercises have been prescribed yet.</Text>
         )}
-        
-        {/* Modal to display results */}
-        <Modal isOpen={isOpen} onClose={onClose} size="xl">
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Exercise Program Updated</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody pb={6}>
+      </VStack>
+      
+      {/* Results Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="lg">
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Exercise Adjustments</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody pb={6}>
+            <VStack align="stretch" spacing={4}>
               {adjustmentSummary && (
-                <Alert status="info" mb={4} borderRadius="md">
-                  <AlertIcon />
-                  <Text whiteSpace="pre-wrap">{adjustmentSummary}</Text>
-                </Alert>
+                <Text fontWeight="medium" mb={2}>{adjustmentSummary}</Text>
               )}
               
               {adjustedExercises && adjustedExercises.map((exercise, index) => {
                 const originalExercise = exercises[index];
-                
                 return (
                   <Box 
-                    key={`${exercise.name}-${index}`}
-                    p={4} 
+                    key={index} 
+                    p={3} 
                     borderWidth={1} 
                     borderRadius="md" 
                     borderColor={borderColor}
-                    mb={4}
-                    bg={
-                      originalExercise.sets !== exercise.sets || originalExercise.reps !== exercise.reps 
-                        ? highlightColor 
-                        : bgColor
-                    }
+                    bg={originalExercise.sets !== exercise.sets || originalExercise.reps !== exercise.reps ? highlightColor : undefined}
                   >
-                    <HStack justifyContent="space-between" mb={2}>
-                      <Heading size="sm">{exercise.name}</Heading>
-                      {getAdjustmentBadge(originalExercise, exercise)}
-                    </HStack>
+                    <Heading size="sm" mb={2}>{exercise.name}</Heading>
                     
                     <HStack spacing={6} mb={2}>
                       <Text>
@@ -197,10 +167,10 @@ export const ExerciseAdjustment: React.FC<ExerciseAdjustmentProps> = ({
               <Button colorScheme="blue" onClick={onClose} mt={4} width="100%">
                 Close
               </Button>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
-      </VStack>
+            </VStack>
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 }; 

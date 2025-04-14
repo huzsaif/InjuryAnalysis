@@ -18,7 +18,6 @@ import {
   Collapse,
   useDisclosure,
   Tag,
-  TagLabel,
   Wrap,
   WrapItem,
 } from '@chakra-ui/react';

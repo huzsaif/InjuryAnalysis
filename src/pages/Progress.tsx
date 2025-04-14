@@ -41,7 +41,6 @@ export const Progress = () => {
     exerciseDifficulty: 5,
     exerciseNotes: ''
   });
-  const [completedExercises] = useState<CompletedExercise[]>([]);
   
   const toast = useToast();
   const navigate = useNavigate();
